@@ -1,0 +1,55 @@
+{%extends "base.html" %}
+
+{% block body %}
+    
+    <main style="background-image: url('static/Gemini_Generated_Image_2ztc552ztc552ztc.png');background-size: cover;background-repeat: no-repeat;background-position: center;height: 1000px;margin: 0;">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for msg in messages %}
+                
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ msg }}
+                
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    <a class="btn btn-secondary" href="{{ url_for('main') }}" role="button">HOME</a>
+    <div class="container text-center">
+                <div class="row align-items-center">
+                <form action="{{ url_for('register') }}" method="post">
+                    <div class="row-5" style="margin-top:400px">
+                         <label style="color:bisque" for="username">Username:</label>
+                         
+                         <input type="text" id="username" name="username" required><br><br>
+                    </div>
+
+
+                    <div class=row-5">
+                    
+                        <label style="color:bisque" for="email">Email:</label>
+                        <input type="email" id="email" name="email" required><br><br>
+                    </div>
+
+                    <div class="row-5">
+                            <label style="color:bisque" for="password">Password:</label>
+                            <input type="password" id="password" name="password" required><br><br>
+                    
+                    </div>
+
+                    <div>
+                        <input type="submit" value="Register">
+
+                    </div>
+
+                    
+                </form>
+                            
+                    
+                </div>
+            </div>
+    </main>
+
+{% endblock %}
