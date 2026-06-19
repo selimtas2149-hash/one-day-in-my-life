@@ -8,3 +8,9 @@
     margin-top: 400px;
 
 }
+
+.sidebar {
+    width: 280px;
+    height: 800px;
+    background-color: #2C5EAD;
+}
