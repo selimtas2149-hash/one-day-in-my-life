@@ -2,11 +2,12 @@ from flask import Flask, render_template, request , url_for,redirect, flash
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
 from sqlalchemy import Integer, String, Boolean
 from sqlalchemy.exc import IntegrityError
 
 import os
-
+from datetime import datetime,timezone
 
 
 
@@ -19,6 +20,8 @@ db = SQLAlchemy(app)
 
 
 
+
+
 class User(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str] = mapped_column(String(80), unique=False, nullable=False)
@@ -26,6 +29,21 @@ class User(db.Model):
     password: Mapped[str] = mapped_column(String(120), nullable=False)
 
 
+class Note(db.Model):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(1000), nullable=False)
+    note: Mapped[str] = mapped_column(String(1000), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    
+    
+ 
+
+    
+    
+    
+     
+    
 
 with app.app_context():
     db.create_all()
@@ -63,9 +81,31 @@ def register():
 
     return render_template("register.html")
 
+@app.route("/delete/<int:id>")
+def delete_note(id):
+    note = Note.query.get_or_404(id)
+
+    db.session.delete(note)
+    db.session.commit()
+
+    return redirect("/home")
+
 @app.route('/home',methods=["GET","POST"])
+@app.route("/home", methods=["GET", "POST"])
 def home():
-    return render_template("home.html")
+    if request.method == "POST":
+        title = request.form["title"]
+        note_text = request.form["note"]
+
+        new_note = Note(title=title, note=note_text)
+        db.session.add(new_note)
+        db.session.commit()
+
+        return redirect("/home")
+
+    notes = Note.query.all()
+
+    return render_template("home.html", note=notes)
     
     
 @app.route('/login',methods=['GET', 'POST'])
