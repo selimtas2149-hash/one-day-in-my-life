@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request , url_for,redirect, flash
+from flask import Flask, render_template, request , url_for,redirect, flash,session
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -8,6 +8,13 @@ from sqlalchemy.exc import IntegrityError
 
 import os
 from datetime import datetime,timezone
+
+import smtplib
+
+import random
+import dotenv
+import os
+dotenv.load_dotenv()
 
 
 
@@ -106,8 +113,101 @@ def home():
     notes = Note.query.all()
 
     return render_template("home.html", note=notes)
+
+
+@app.route("/password", methods=["GET", "POST"])
+def forgot_password():
+
+    if request.method == "POST":
+
+        email = request.form.get("email")
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user:
+            flash("This email is not registered!")
+            return redirect(url_for("forgot_password"))
+
+        code = str(random.randint(100000, 999999))
+
+        session["reset_code"] = code
+        session["reset_email"] = email
+
+        s = smtplib.SMTP("smtp.gmail.com", 587)
+        s.starttls()
+
+        s.login(
+            os.getenv("MYEMAIL"),
+            os.getenv("MYPASSWORD")
+        )
+
+        message = f"""Subject: Password Reset Code
+
+                    Your verification code is: {code}
+                    """
+
+        s.sendmail(
+            os.getenv("MYEMAIL"),
+            email,
+            message
+        )
+
+        s.quit()
+
+        flash("Code sent to your email!")
+        return redirect(url_for("verify_code"))
+
+    return render_template("forget.html")
+
+
+            
+        
+
+    
+@app.route("/verify-code", methods=["GET", "POST"])
+def verify_code():
+
+    if request.method == "POST":
+
+        entered_code = request.form.get("code")
+
+        if entered_code == session.get("reset_code"):
+            return redirect(url_for("new_password"))
+
+        flash("Wrong code!")
+
+    return render_template("verify_code.html")
+
+@app.route("/new-password", methods=["GET", "POST"])
+def new_password():
+
+    if request.method == "POST":
+
+        password = request.form.get("password")
+
+        user = User.query.filter_by(
+            email=session.get("reset_email")
+        ).first()
+
+        user.password = password
+
+        db.session.commit()
+
+        session.pop("reset_code", None)
+        session.pop("reset_email", None)
+
+        flash("Password changed successfully!")
+
+        return redirect(url_for("login"))
+
+    return render_template("new_password.html")
     
     
+    
+    
+    
+
+
 @app.route('/login',methods=['GET', 'POST'])
 def login():
     if request.method == "POST":
@@ -128,7 +228,6 @@ def login():
     
     
     return render_template("checkforlogin.html")
-
 
 if __name__ == '__main__':
     app.run(debug=True)
